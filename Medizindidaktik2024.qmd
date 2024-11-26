@@ -1,0 +1,375 @@
+---
+title: "LLMs in der Medizindidaktik"
+author: "[Prof. Dr. Dr. Dominikus Herzberg](https://www.thm.de/mni/dominikus-herzberg)"
+institute: "Technische Hochschule Mittelhessen<br>Fachbereich Mathematik, Naturwissenschaften, Informatik<br>35390 Gießen, Wiesenstr. 14"
+lang: de
+bibliography: KIRessourcen.bib
+csl: deutsche-gesellschaft-fur-psychologie.csl
+format:
+    revealjs:
+        theme: white
+        slideNumber: true
+        footer: "Medizindidaktik für Habilitierende, Uni Marburg, 27. Nov. 2024"
+        logo: https://licensebuttons.net/l/by-nc-nd/4.0/88x31.png
+        chalkboard: true
+        scrollable: true
+toc: true
+toc-depth: 1
+toc-title: "Übersicht"
+---
+
+# Vorstellung
+
+* Elektrotechnik (Dipl.-Ing., RWTH Aachen)<br>
+Wirtschaftsingenieur (Dipl. Wirt.-Ing., Fernuni Hagen)<br>
+Higher Education (M.A., Universität Hamburg)
+* Dr.-Ing. in der Informatik (RWTH Aachen, 2003)<br>
+Dr. phil. in Bildungswissenschaften (Uni Hamburg, 2023)
+* 7 Jahre Telekommunikationsindustrie (Ericsson, Aachen)<br>
+2003 - 2014 Professur Methoden des Software-Eng., HHN<br>
+seit 2014 Professur für Informatik, THM
+
+<!-- # Wie ChatGPT arbeitet -->
+
+# Wie GPT-Sprachmodelle arbeiten 🩻
+
+GPT = Generative Pre-trained Transformer[^GPT-Bezug]
+
+[^GPT-Bezug]: Ich beziehe mich hier vorrangig auf das Konversationsprogramm [ChatGPT 4](https://chat.openai.com/) von [OpenAI](https://openai.com/). Ähnliche kommerzielle Angebote gibt es z.B. von Google mit [Gemini](https://gemini.google.com/), von [Anthropic](https://www.anthropic.com/) (die Gründer sind frühere OpenAI-Angestellte) mit [Claude](https://claude.ai/) und von [Perplexity](https://www.perplexity.ai/) mit der gleichnamigen KI. Wenn man sich nicht auf ein Produkt oder eine Dienstleistung beziehen möchte, spricht man von Large Language Models (LLMs). Eine Liste freier Sprachmodelle findet sich z.B. [hier](https://github.com/eugeneyan/open-llms).
+
+## Neuronales Netz
+
+![Quelle: [Wikimedia](https://commons.wikimedia.org/w/index.php?curid=101588003)](NeuronalesNetz.png){fig-align="center"}
+
+::: {.notes}
+By Bennani-Baiti, B., Baltzer, P.A.T. Künstliche Intelligenz in der Mammadiagnostik. Radiologe 60, 56–63 (2020). https://doi.org/10.1007/s00117-019-00615-y, CC BY 4.0, https://commons.wikimedia.org/w/index.php?curid=101588003
+:::
+
+## ✂️ Textzerlegung in Token
+
+![](Beispiel_Token.png){fig-align="center"}
+
+<!--
+ChatGPT verarbeitet Text in Bruchstücken, die Einheiten von Zeichenfolgen bilden und Token heißen. Das kann man sich ähnlich zu Silben vorstellen. Während Silben Lauteinheiten des Sprechens darstellen, sind Token ChatGPTs Zeicheneinheiten der Schriftsprache. Jedes einzelne Token wird von ChatGPT durch eine Zahl dargestellt. Gleiche Token bekommen die gleiche Zahl.
+
+https://platform.openai.com/tokenizer
+-->
+
+```{.python}
+[16047, 38, 2898, 2807, 61008, 295, 2991, 304, 3320, 1412, 267, 92739, 11, 2815, 18560, 90349, 6675, 10120, 29424, 8566, 4469, 293, 52965, 2073, 9857, 65589, 27922, 13, 19537, 16095, 893, 9267, 12999, 25105, 6915, 6529, 8211, 8123, 14230, 59258, 13, 468, 22243, 9484, 8211, 8123, 5034, 1088, 258, 90349, 951, 328, 62331, 729, 15627, 59258, 11, 12868, 9857, 13149, 38, 2898, 82, 10120, 718, 1994, 258, 90349, 2761, 5124, 42480, 52773, 1815, 13, 622, 59626, 95888, 818, 9857, 15165, 6675, 13149, 38, 2898, 20350, 10021, 83845, 294, 33481, 33963, 13, 72497, 12333, 9857, 75775, 2815, 30103, 12333, 83845, 13]
+```
+
+* <span style="background-color: rgba(107,64,216,.3)">Chat</span> als 16047,
+<span style="background-color: rgba(104,222,122,.4)">G</span> als 38,
+<span style="background-color: rgba(244,172,54,.4)">PT</span> als 2898,
+..., 
+<span style="background-color: rgba(39,181,234,.4)">&nbsp;Token</span> als 9857, ...
+* Token bilden das Vokabular von ChatGPT
+* In einer Eingabe hat jedes Token eine Position
+
+<!--
+.tokenizer-tkn-0 {
+    background: rgba(107,64,216,.3)
+}
+
+.tokenizer-tkn-1 {
+    background: rgba(104,222,122,.4)
+}
+
+.tokenizer-tkn-2 {
+    background: rgba(244,172,54,.4)
+}
+
+.tokenizer-tkn-3 {
+    background: rgba(239,65,70,.4)
+}
+
+.tokenizer-tkn-4 {
+    background: rgba(39,181,234,.4)
+}
+-->
+
+## Wie ein Prompt verarbeitet wird
+
+![](Tokenberechnung.png){fig-align="center"}
+
+Prompt ist eine Folge von Token. Es wird die Wahrscheinlichkeit des nächsten Tokens berechnet. Die "Temperatur" beeinflusst die Wahl des Tokens.
+
+::: {.notes}
+Das EOS-Token (End Of Sequence) wird in GPT verwendet, um das Ende von einer Sinneinheiten zur markieren. Das lernt GPT gleich mit beim Training.
+:::
+
+## Von Tokenfolge zum Input Embed
+
+* **Token Embedding** (Matrix, im Training gelernt)<br>
+⏵ hält zu jedem Token einen Vektor aus Kommazahlen vor<br>
+⏵ Vektor kodiert Bedeutungsbezüge von Token
+* **Position Embedding** (Matrix, über Formel oder erlernt)<br>
+⏵ hält zu jeder Position einen Vektor aus Kommazahlen vor<br>
+⏵ Vektor kodiert Position und positionale Eigenschaften
+* **Input Embed/ding** (Matrix)<br>
+⏵ verrechnet jeweils Vektor$_{TE}$ + Vektor$_{PE}$ einer Tokenfolge<br>
+⏵ stellt die Vektoren zu Matrix zusammen $\rightarrow$ Input Embed<br>
+⏵ Das Input Embed läuft durch das trainierte Sprachmodell
+
+::: {.notes}
+Bedeutungsbezüge entstehen in einfacher Form durch Verwendungsähnlichkeit. Beispiel:
+
+* Alligator + Krokodil, fast verwendungsgleich
+* Alligator + Vogel, verwendungsnah wg. Beutebezug
+* Alligator + Sofa, verwendungsfern
+:::
+
+## Transformer (trainiert)
+
+:::: {.columns}
+
+::: {.column width="30%"}
+![GPT-Architektur, Bild: [Marxav, CC0](https://commons.wikimedia.org/w/index.php?curid=127066752)](TransformerArchitektur.jpeg)
+:::
+
+::: {.column width="70%"}
+* Nimmt Input Embed entgegen
+* Hat mehrere Einheiten zur "Aufmerksamkeitsverarbeitung"
+* Analysiert Bedeutungs- und Positionsbezüge unter den Token der Tokenfolge
+* Liefert verbessertes Input Embed zurück
+
+Embed durchläuft weitere Transformer
+:::
+
+::::
+
+## Wie lernt ein LLM Sprache?
+
+![Abbildung: Lernen durch Korrelation und Prädiktion](PrinzipSelfSupervisedLearning.png)
+
+## Abstraktionen in Transformer-Folge
+
+* Lower Level Features und Muster<br>
+Syntax, Grammatik, Wort-Assoziationen
+
+* Higher Level Abstraktionen und Beziehungen<br>
+kontextabhängige Bedeutungen, Komplexe semantische Bezüge, Diskursstrukturen
+
+Was genau in den Transformerschichten passiert, versteht und weiß niemand.
+
+## [Sind LLMs N-Gramme _on steroids_?](https://www.youtube.com/watch?v=W485bz0_TdI)
+
+* Logisches Denken? Bsp.: [Alice hat vier Schwestern und drei Brüder. Wieviele Schwestern hat ein Bruder von Alice?](https://arxiv.org/pdf/2406.02061)
+* Mathematisches Begründen? [Replikation von Begründungen aus Trainingsdaten](https://arxiv.org/abs/2410.05229)
+* Nachdenken und originär neue Ideen entwickeln? Allerdings kommt man ohne Nachdenken weit, Bsp. [Schach-GPT](https://arxiv.org/abs/2402.04494)
+* Systematisches Vorgehen? Bsp. schriftliches Rechnen
+* Mehr können, als sie gelernt haben? [Sprachmodelle wachsen nicht über sich hinaus](https://www.heise.de/news/Studie-Grosse-Sprachmodelle-sind-von-menschlichem-Denken-noch-weit-entfernt-9832168.html)
+
+
+## Die Entwicklung der GPT-Varianten
+
+Jahr | Modell| Layer | Parameter | Token-Kontext |
+|----|-------|-------|-----------|---------------|
+6/2018 | GPT-1 | 12 | 110 Mill. |
+2/2019 | GPT-2 | 48 | 1.5 Mrd. |
+6/2020 | GPT-3 | 96 | 175 Mrd. | 2048 |
+3/2022 | GPT-3.5 | | |
+3/2023 | GPT-4 | $\ge$ 120 | ~1 Bill. | 8192, 32768
+
+Das Training von GPT-4 soll [100 Mill. USD](https://www.wired.com/story/openai-ceo-sam-altman-the-age-of-giant-ai-models-is-already-over/) gekostet haben.
+
+Das Gehirn: 1,5 kg, ~90 Milliarden Nervenzellen, mit einer Schaltzeit von ca. 1 ms pro Neuron, 20 Watt
+
+## Sprachmodelle "halluzinieren":<br>Kein Bug, sondern funktionsbedingt
+
+Weg mag, Podcast-Episode in Herzbergs Hörsaal [anhören](https://open.spotify.com/episode/4V3j4IRNcVuE4S9S6p64Hk?si=6223040f7c584656) 👂
+
+::: {.callout-note icon=false}
+{{< include _ChatKaffetasseEinpacken.qmd >}}
+:::
+
+## Anforderungen an Nutzer*innen
+
+**Treffen, Aktivieren, Auffinden von Frames**
+
+* Sprachliche Ausdruckfähigkeit (Sprachbeherrschung)
+* Grundwissen, thematisches Wissen (Fach- und Allgemeinbildung), Framing
+
+**Qualitätssicherung**
+
+* Sozial- und Wirklichkeitskompetenz, ges. Menschenverstand
+* Intuition, Allgemeinverstand, Recherche, Überprüfung
+
+**Taschenrechner-Analogie:** Rechenverständnis erforderlich
+
+# Drei Einwürfe 🧐
+
+1. Sprache findet in Lebensvollzügen statt
+2. Intelligenz vs. Fähigkeit zur Kommunikation
+3. KI macht Bildung zum Technikproblem
+
+> Die damit verbundenen Problemfelder stelle ich gesondert vor
+
+## 1. Sprache in Lebensvollzügen
+
+![Abbildung: Generative KI basiert auf Prädiktion, nicht Denken](IntelligenzVsGenerativeKI.png)
+
+## 1. Modell: Sprache ist nicht alles
+
+![Abbildung: Sprache in Vollzugssystemen](Sprache%20in%20unterschiedlichen%20Vollzugssystemen%20V0.8.png){fig-align="center"}
+
+
+## 2. Intelligenz und Kommunikation
+
+> "Die Fähigkeit zu denken, die wir mit Intelligenz assoziieren, kann von der Fähigkeit, an Kommunikation teilzunehmen, getrennt werden."
+>
+> -- Elena @ElenaEsposito2024kmum [S. 24]
+
+## 2. Sender/Empfänger oder Mitteilung
+
+![Abbildung: Geht es um Intelligenz oder Kommunikation?](SenderOderKommunikationsmodell.png){fig-align="center"}
+
+
+## 2. Das I der KI ist Dein I {.center}
+
+![Abbildung: Geht es beim Turing-Test wirklich um Intelligenz?](VomTuringTestZumReverseTuringTest.png)
+
+## 3. Bildung als Technikproblem (Teil 1)
+
+![In den Technikwissenschaften geht es nicht um Wahrheit, sondern um Effektivität. Das Bild zeigt die einfachste handlungstheoretische Denkfigur (einen praktischen Syllogismus), die Wissen und Handlung in einen Bezug stellt und damit kategorial verschiedene Dimensionen verknüpft, siehe auch @DominikusHerzberg2023kewd.](Technik1.png)
+
+## 3. Bildung als Technikproblem (Teil 2)
+
+![Der Einsatz von KI bringt implizite Annahmen mit sich.](Technik2.png)
+
+# Problemfelder 🩺
+
+"Houston, wir haben ein Problem" -- Apollo 13 (Film)
+
+## Problemfeld Deskilling[^DeskillingReinmann] {.center}
+
+::: {.r-fit-text}
+🪚 + 🔧 vs. 🪚 + ❓ 
+:::
+
+Wir wissen nicht, was wir verlieren[^DeskillingGedanken]
+
+[^DeskillingReinmann]: siehe @GabiReinmann2023ddki
+
+[^DeskillingGedanken]:
+- Kulturtechniken lösen Skills durch andere ab. Wirklich? Arbeitsteilung, Arbeitsverlagerung, global verflochtene Arbeitsprozesse.
+- Zeichnen am iPad: Effektsimulation statt Materialwirkung
+
+## Problemfeld Asozialität {.center}
+
+::: {.r-fit-text}
+🤼 vs. 🧑‍💻 🤖 🙍
+:::
+
+Wie generative KI das Soziale erodiert[^AsozialitätGedanken]
+
+[^AsozialitätGedanken]:
+- A schreibt B eine KI-generierte Email, was B nicht bemerkt (Beispiel: Schulkind liefert Textinterpretation ab und hat dafür nicht mal einen Komplizen gebraucht)
+- Was macht das mit mir, wenn ich weiß, dass ein Text generiert ist
+
+## Problemfeld Datafizierung {.center}
+
+::: {.r-fit-text}
+🌳 vs. [63973, 2478]
+:::
+
+Vom Wert in der Welt zu sein[^DatafizierungGedanken]
+
+[^DatafizierungGedanken]:
+- Daten als vollzogene Reduktionen und Abstraktionen (Daten sind Abbilder und Repräsentation)
+- Die Möglichkeit der Verknüpfung: horizonterweiternd
+- Daten als "Wirklichkeit" einer simulierten Welt, eines "digitalen Zwillings"
+
+## Problemfeld Verständnisverlust {.center}
+
+::: {.r-fit-text}
+🧠 📚 vs. 🧩 ☘️
+:::
+
+Der Zweck heiligt die Mittel[^VerständnisverlustGedanken]
+
+[^VerständnisverlustGedanken]:
+- Alles ist verknüpfbar und auf Effekte hin untersuchbar
+- Wir können uns das Funktionieren nicht mehr erklären, bestenfalls plausibilisieren
+- Die Technikwissenschaften kennen das: Es geht um Zweck und Nutzen, Funktionieren, Testen und Technisieren (Zusammenstellung, Konfiguration)
+- Beispiel Wettervorhersage: physikalische Simulation vs. KI-generierte Prädiktion
+
+## Problemfeld Entgeisterung {.center}
+
+::: {.r-fit-text}
+🤰 🧘 ⚰️ vs. 🖱️ 🖥️ ⌨️
+:::
+
+Im Leben stehen, Dabeisein und Endlichsein[^EntgeisterungGedanken]
+
+[^EntgeisterungGedanken]:
+- Eine KI versteht so wenig von Menschen, wie wir von einem Wal oder einer Sonnenblume
+- Von der Aufgabe, das Leben zu meistern und es zu erleben. Was ist ein erfülltes Leben? 
+
+## Problemfeld Wertverschiebung {.center}
+
+::: {.r-fit-text}
+⚖️ 🎖 vs. 💶 🛎️
+:::
+
+<!-- Verwerfliches: 📇 🗂️ vs. 💾 🌎 -->
+
+Datenschutz, Recht, Moral und Ethik,
+
+Anstand, Gesetz, Erziehung, Bildung ...[^WertverschiebungGedanken]
+
+[^WertverschiebungGedanken]:
+- Wenn KI mich als Lehrenden ersetzen kann, warum nicht auch die Lernenden?
+- Wenn Menschen zusammen sind, können Sie sich eine Verfassung, Spielregeln, eine Geschäftsordnung geben -- weil sie miteinander leben wollen
+
+## Was Sprachmodellen bleibt
+
+* "Beherrschen" sprachlich, narrative Logiken
+* "Verstehen" das Soziale in Sprache
+* Übertreffen menschliches Sprachwissen
+* Haben so ziemlich alles schon einmal "gehört"
+* Kennen zahllose sprachliche Muster & Frames
+
+# Rückbesinnung: Didaktik 🚑
+
+## Didaktik[^Didaktik]
+
+* Wissenschaft und Praxis des Lehrens und Lernens
+* Hochschuldidaktik: Lehr-Lernziele, Inhalte, Methoden, Prüfungen etc. in Studium und Lehre im Hochschulkontext
+* Wissenschaftsdidaktik: fokussiert auf Vermittlung eines Weltaufschlusses, der in Wissenschaft angelegt ist
+* Kurz: "Lehrhandeln von forschenden Wissenschaftlerinnen"
+* Schuldidaktik: entsprechend inkl. Pädagogik
+
+[^Didaktik]: Kondensat aus @GabiReinmann2024Widi, ausgenommen Schuldidaktik
+
+## Problem: Bildung und das Leben
+
+**Drei Einwürfe**
+
+Sprache in Lebensvollzügen, Intelligenz und Kommunikation, KI macht Bildung zum Technikproblem
+
+**Mehrere Problemfelder**
+
+Deskilling, Asozialität, Datafizierung, Verständnisverlust, Entgeisterung, Wertverschiebung
+
+> Dazu kommt: Die ärztliche Verantwortung
+
+## Rückbesinnung
+
+* Didaktik ist keine Technikwissenschaft
+* Setzung: Menschenbild, Werte, Normen
+* KI von der Didaktik her denken und begründen
+* Forderung: Bildungsfolgenforschung
+
+Ist der Einsatz von KI wissenschaftlich vertretbar?
+
+## Zeit für praktische Übungen
+
+[Demonstrationen und Übungen](https://docs.google.com/document/d/17GdiNjmo_1wNN9GOjruvuSrT9tithOJ5S2oOW7x0-7I/edit?usp=sharing)
+
+# Quellen
+
+(ggfs. scrollen)
+
+<!-- https://emojis.wiki/de -->
